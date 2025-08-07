@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stroop-Test</title>
+<style>
+    #word {
+      font-size: 48px;
+      margin: 40px;
+      text-align: center;
+    }
+    .btn {
+      padding: 10px 20px;
+      font-size: 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .btn[data-color="red"]    { background-color: red;    color: white; }
+    .btn[data-color="green"]  { background-color: green;  color: white; }
+    .btn[data-color="blue"]   { background-color: blue;   color: white; }
+    .btn[data-color="yellow"] { background-color: yellow; color: black; }
+    #results { margin-top: 30px; text-align: center; }
+</style>
+</head>
+<body>
+<h1 style="text-align:center;">Stroop-Test</h1>
+<div id="start" style="text-align:center; margin-top:50px;">
+<button id="startBtn" class="btn">Start</button>
+</div>
+<div id="test" style="display:none; text-align:center;">
+<div id="word"></div>
+<div>
+<button class="btn" data-color="red">Rot</button>
+<button class="btn" data-color="green">Grün</button>
+<button class="btn" data-color="blue">Blau</button>
+<button class="btn" data-color="yellow">Gelb</button>
+</div>
+</div>
+<div id="results" style="display:none;"></div>
+ 
+  <script>
+    (function(){
+      const colors = ['rot','grün','blau','gelb'];
+      const map = { rot:'red', grün:'green', blau:'blue', gelb:'yellow' };
+      const trials = [];
+      const n = 20;
+      let current = 0, startTime;
+ 
+      document.getElementById('startBtn').onclick = () => {
+        document.getElementById('start').style.display = 'none';
+        document.getElementById('test').style.display  = 'block';
+        nextTrial();
+      };
+ 
+      document.querySelectorAll('.btn[data-color]').forEach(btn => {
+        btn.onclick = () => {
+          const rt = Date.now() - startTime;
+          const choice = btn.dataset.color;
+          const t = trials[current - 1];
+          t.response = choice;
+          t.rt       = rt;
+          t.correct  = (choice === t.wordColor);
+          nextTrial();
+        };
+      });
+ 
+      function nextTrial() {
+        if (current >= n) {
+          finish();
+          return;
+        }
+        const congruent = Math.random() < 0.5;
+        const wordColor = colors[Math.floor(Math.random() * colors.length)];
+        const wordText  = congruent
+          ? wordColor
+          : colors.filter(c => c !== wordColor)[Math.floor(Math.random()*3)];
+ 
+        trials.push({ wordText, wordColor, congruent });
+        current++;
+ 
+        const w = document.getElementById('word');
+        w.textContent = wordText;
+        w.style.color = map[wordColor];
+        startTime = Date.now();
+      }
+ 
+      function finish() {
+        document.getElementById('test').style.display = 'none';
+        const correctCount = trials.filter(t => t.correct).length;
+        const avgRt = Math.round(trials.reduce((sum,t) => sum + t.rt, 0) / trials.length);
+ 
+        document.getElementById('results').innerHTML = `
+<h2>Ergebnisse</h2>
+<p>Richtige Antworten: ${correctCount} / ${n}</p>
+<p>Durchschnittliche Reaktionszeit: ${avgRt} ms</p>
+        `;
+        document.getElementById('results').style.display = 'block';
+        console.log(trials);
+      }
+    })();
+</script>
+</body>
+</html>
